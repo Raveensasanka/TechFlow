@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+{% block title %}TechFlow - Report Issue{% endblock %}
+{% block content %}
+<div class="client-portal">
+    <div class="portal-header">
+        <div class="header-icon">
+            <i class="fas fa-rocket"></i>
+        </div>
+        <h1>Report Your Issue</h1>
+        <p>Get fast, professional support from our technical team. We'll respond within 24 hours.</p>
+        <div class="header-stats">
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-number">24h</span>
+                    <span class="stat-label">Response Time</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-number">99%</span>
+                    <span class="stat-label">Success Rate</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <div class="stat-content">
+                    <span class="stat-number">24/7</span>
+                    <span class="stat-label">Support</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <form id="issueForm" class="issue-form">
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-user"></i>
+                Contact Information
+            </h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="name">
+                        <i class="fas fa-user-circle"></i>
+                        Full Name *
+                    </label>
+                    <input type="text" id="name" name="name" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">
+                        <i class="fas fa-phone"></i>
+                        Phone Number *
+                    </label>
+                    <input type="tel" id="phone" name="phone" required placeholder="+1 (555) 123-4567">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">
+                    <i class="fas fa-envelope"></i>
+                    Email Address *
+                </label>
+                <input type="email" id="email" name="email" required placeholder="your.email@company.com">
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                Issue Details
+            </h3>
+            <div class="form-group">
+                <label for="project">
+                    <i class="fas fa-project-diagram"></i>
+                    Project *
+                </label>
+                <select id="project" name="project" required>
+                    <option value="">Select Project</option>
+                    <option value="PMS">PMS - Parking Management System</option>
+                    <option value="PGS">PGS - Parking Guidance System</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="priority">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Priority Level *
+                </label>
+                <select id="priority" name="priority" required>
+                    <option value="">Select Priority</option>
+                    <option value="High">High - Critical issue affecting operations</option>
+                    <option value="Medium">Medium - Important but not critical</option>
+                    <option value="Low">Low - Minor issue or enhancement</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">
+                    <i class="fas fa-align-left"></i>
+                    Issue Description *
+                </label>
+                <textarea id="description" name="description" rows="5" required placeholder="Please describe the issue in detail. Include steps to reproduce, error messages, and any relevant information..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="image_upload">
+                    <i class="fas fa-camera"></i>
+                    Upload Images (Optional - Max 10)
+                </label>
+                <div class="file-upload-area">
+                    <input type="file" id="image_upload" name="image_upload" accept="image/*" multiple class="file-input">
+                    <div class="file-upload-text">
+                        <span class="upload-icon">📁</span>
+                        <span class="upload-text">Click to upload or drag and drop</span>
+                        <span class="upload-subtext">PNG, JPG, GIF up to 5MB each (Max 10 images)</span>
+                    </div>
+                </div>
+                <div class="uploaded-files" id="uploadedFiles" style="display: none;">
+                    <div class="files-header">
+                        <span class="files-count">0/10 images uploaded</span>
+                        <button type="button" class="clear-files-btn" onclick="clearAllFiles()">Clear All</button>
+                    </div>
+                    <div class="files-list" id="filesList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <span class="btn-icon">🚀</span>
+                Submit Issue
+            </button>
+            <p class="submit-note">By submitting, you agree to our terms of service and privacy policy.</p>
+        </div>
+    </form>
+</div>
+
+<script>
+// Handle multiple file uploads
+let uploadedFiles = [];
+
+document.getElementById('image_upload').addEventListener('change', function(e) {
+    const files = Array.from(e.target.files);
+    
+    // Validate file count
+    if (files.length > 10) {
+        Swal.fire({
+            title: '❌ Too Many Files',
+            text: 'Please select maximum 10 images',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
+        return;
+    }
+    
+    // Validate file sizes
+    const oversizedFiles = files.filter(file => file.size > 5 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+        Swal.fire({
+            title: '❌ File Too Large',
+            text: 'Please select images smaller than 5MB each',
+            icon: 'error',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#dc3545'
+        });
+        return;
+    }
+    
+    // Replace uploaded files (don't accumulate)
+    uploadedFiles = files.slice(0, 10); // Keep only first 10
+    updateFileDisplay();
+});
+
+function updateFileDisplay() {
+    const uploadedFilesDiv = document.getElementById('uploadedFiles');
+    const filesList = document.getElementById('filesList');
+    const filesCount = document.querySelector('.files-count');
+    
+    if (uploadedFiles.length > 0) {
+        uploadedFilesDiv.style.display = 'block';
+        filesCount.textContent = `${uploadedFiles.length}/10 images uploaded`;
+        
+        filesList.innerHTML = '';
+        uploadedFiles.forEach((file, index) => {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+                <button type="button" class="remove-file-btn" onclick="removeFile(${index})">×</button>
+            `;
+            filesList.appendChild(fileItem);
+        });
+    } else {
+        uploadedFilesDiv.style.display = 'none';
+    }
+}
+
+function removeFile(index) {
+    uploadedFiles.splice(index, 1);
+    updateFileDisplay();
+}
+
+function clearAllFiles() {
+    uploadedFiles = [];
+    document.getElementById('image_upload').value = '';
+    updateFileDisplay();
+}
+
+document.getElementById('issueForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    
+    // Prepare data for API
+    const data = new FormData();
+    data.append('name', formData.get('name'));
+    data.append('phone', formData.get('phone'));
+    data.append('email', formData.get('email'));
+    data.append('project', formData.get('project'));
+    data.append('priority', formData.get('priority'));
+    data.append('description', formData.get('description'));
+    
+    // Add images if selected
+    console.log('Uploading files:', uploadedFiles.length);
+    uploadedFiles.forEach((file, index) => {
+        console.log(`Adding file ${index}:`, file.name, file.size);
+        data.append(`image_${index}`, file);
+    });
+    
+    // Add loading state to form
+    const form = document.getElementById('issueForm');
+    form.classList.add('form-loading');
+    
+    // Show loading
+    Swal.fire({
+        title: 'Submitting Issue...',
+        text: 'Please wait while we process your request',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
+    try {
+        const response = await fetch('/api/issues', {
+            method: 'POST',
+            body: data  // FormData doesn't need Content-Type header
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            // Remove loading state
+            form.classList.remove('form-loading');
+            form.classList.add('success-animation');
+            
+            Swal.fire({
+                title: '🎉 Issue Reported Successfully!',
+                text: `Your issue has been reported with ID: ${result.report_id}`,
+                icon: 'success',
+                confirmButtonText: 'Great!',
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                // Reset form
+                document.getElementById('issueForm').reset();
+                form.classList.remove('success-animation');
+            });
+        } else {
+            form.classList.remove('form-loading');
+            Swal.fire({
+                title: '❌ Error',
+                text: result.error || 'Failed to submit issue',
+                icon: 'error',
+                confirmButtonText: 'Try Again',
+                confirmButtonColor: '#dc3545'
+            });
+        }
+    } catch (error) {
+        form.classList.remove('form-loading');
+        Swal.fire({
+            title: '❌ Connection Error',
+            text: 'Failed to submit issue. Please check your connection and try again.',
+            icon: 'error',
+            confirmButtonText: 'Retry',
+            confirmButtonColor: '#dc3545'
+        });
+    }
+});
+
+</script>
+{% endblock %}

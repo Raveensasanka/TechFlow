@@ -1,0 +1,699 @@
+{% extends "base.html" %}
+{% block title %}TechFlow - Technical Team Dashboard{% endblock %}
+{% block content %}
+<div class="dashboard">
+    <div class="dashboard-header">
+        <div class="header-content">
+            <div class="header-title">
+                <div class="title-icon">
+                    <i class="fas fa-tachometer-alt"></i>
+                </div>
+                <div class="title-text">
+                    <h1>Technical Team Dashboard</h1>
+                    <p>Monitor, manage and resolve issues with precision and efficiency</p>
+                </div>
+            </div>
+            <div class="dashboard-stats">
+                <div class="stat-card total">
+                    <div class="stat-icon">
+                        <i class="fas fa-list-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="totalIssues">0</span>
+                        <span class="stat-label">Total Issues</span>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+                <div class="stat-card pending">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="pendingIssues">0</span>
+                        <span class="stat-label">Pending</span>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-minus"></i>
+                    </div>
+                </div>
+                <div class="stat-card in-progress">
+                    <div class="stat-icon">
+                        <i class="fas fa-cog fa-spin"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="inProgressIssues">0</span>
+                        <span class="stat-label">In Progress</span>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+                <div class="stat-card completed">
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-value" id="completedIssues">0</span>
+                        <span class="stat-label">Completed</span>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-controls">
+            <button id="printBtn" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                <span>Print Data</span>
+            </button>
+            <button id="exportBtn" class="btn btn-success">
+                <i class="fas fa-download"></i>
+                <span>Export Excel</span>
+            </button>
+            <button id="refreshBtn" class="btn btn-info">
+                <i class="fas fa-sync-alt"></i>
+                <span>Refresh</span>
+            </button>
+            <button id="resetBtn" class="btn btn-warning">
+                <i class="fas fa-trash-alt"></i>
+                <span>Reset Data</span>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filter Controls -->
+    <div class="filter-controls">
+        <div class="filter-header">
+            <div class="filter-title">
+                <i class="fas fa-filter"></i>
+                <span>Filter & Search</span>
+            </div>
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search issues...">
+            </div>
+        </div>
+        <div class="filter-row">
+            <div class="filter-group">
+                <label for="statusFilter">
+                    <i class="fas fa-tasks"></i>
+                    Status
+                </label>
+                <select id="statusFilter" class="filter-select">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="priorityFilter">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Priority
+                </label>
+                <select id="priorityFilter" class="filter-select">
+                    <option value="">All Priorities</option>
+                    <option value="High">High</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Low">Low</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="techLevelFilter">
+                    <i class="fas fa-layer-group"></i>
+                    Tech Level
+                </label>
+                <select id="techLevelFilter" class="filter-select">
+                    <option value="">All Levels</option>
+                    <option value="L1">L1 - CE</option>
+                    <option value="L2">L2 - Skidata/TKH</option>
+                    <option value="L3">L3 - Skidata/TKH</option>
+                </select>
+            </div>
+            
+            <div class="filter-actions">
+                <button id="clearFilters" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="issues-container">
+        {% if issues %}
+            {% for issue in issues|reverse %}
+            <div class="issue-card" data-status="{{ issue.status }}" data-priority="{{ issue.priority }}" data-tech-level="{{ issue.tech_level }}">
+                <div class="issue-header">
+                    <div class="issue-id">
+                        <div class="id-badge">
+                            <i class="fas fa-hashtag"></i>
+                            <span class="id-label">Issue ID</span>
+                        </div>
+                        <h3>{{ issue.report_id }}</h3>
+                    </div>
+                    <div class="issue-badges">
+                        <span class="status-badge status-{{ issue.status.lower().replace(' ', '-') }}">
+                            <i class="fas fa-{{ 'clock' if issue.status == 'Pending' else 'cog' if issue.status == 'In Progress' else 'check-circle' }}"></i>
+                            <span>{{ issue.status }}</span>
+                        </span>
+                        <span class="priority-badge priority-{{ issue.priority.lower() }}">
+                            <i class="fas fa-{{ 'exclamation-triangle' if issue.priority == 'High' else 'minus-circle' if issue.priority == 'Medium' else 'info-circle' }}"></i>
+                            <span>{{ issue.priority }}</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="issue-details">
+                    <div class="details-grid">
+                        <div class="detail-section">
+                            <h4>👤 Client Information</h4>
+                            <div class="detail-item">
+                                <span class="detail-label">Name:</span>
+                                <span class="detail-value">{{ issue.client_name }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Phone:</span>
+                                <span class="detail-value">{{ issue.phone_number }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Email:</span>
+                                <span class="detail-value">{{ issue.email }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h4>🔧 Technical Details</h4>
+                            <div class="detail-item">
+                                <span class="detail-label">Project:</span>
+                                <span class="detail-value">{{ issue.project }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Tech Level:</span>
+                                <span class="detail-value">{{ issue.tech_level }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Assigned To:</span>
+                                <span class="detail-value">{{ issue.assigned_to }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="description-section">
+                        <h4>📝 Issue Description</h4>
+                        <p class="issue-description">{{ issue.issue_description }}</p>
+                        {% if issue.image_filename and issue.image_filename != 'nan' and issue.image_filename != None and issue.image_filename|string != 'nan' and issue.image_filename|string != 'None' and issue.image_filename|string|trim != '' %}
+                        <div class="image-section">
+                            <button class="btn btn-images" onclick="showImages('{{ issue.image_filename|string }}', '{{ issue.report_id }}')">
+                                📷 Show Images ({{ issue.image_filename|string|split(',')|length }})
+                            </button>
+                            <div class="image-preview" style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                                {% for filename in issue.image_filename|string|split(',') %}
+                                    {% if filename|trim != '' and filename|trim != 'nan' and filename|trim != 'None' %}
+                                    <div class="preview-item" style="display: flex; flex-direction: column; align-items: center; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+                                        <img src="{{ url_for('uploaded_file', filename=filename|trim) }}" 
+                                             alt="Preview" 
+                                             loading="lazy"
+                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.3s ease;"
+                                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                                             onload="this.style.opacity='1';"
+                                             onclick="openImageModal('{{ url_for('uploaded_file', filename=filename|trim) }}')">
+                                        <div class="image-error" style="display: none; font-size: 10px; color: #dc2626; text-align: center; padding: 0.5rem;">
+                                            ❌ Failed to load
+                                        </div>
+                                        <a href="{{ url_for('uploaded_file', filename=filename|trim) }}" 
+                                           download="{{ filename|trim }}" 
+                                           style="font-size: 11px; color: #3b82f6; text-decoration: none; margin-top: 0.25rem; padding: 0.25rem 0.5rem; background: #eff6ff; border-radius: 4px; transition: all 0.2s ease;"
+                                           onmouseover="this.style.background='#dbeafe';"
+                                           onmouseout="this.style.background='#eff6ff';">
+                                            📥 Download
+                                        </a>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="timeline-section">
+                        <h4>⏰ Timeline</h4>
+                        <div class="timeline-item">
+                            <span class="timeline-label">Created:</span>
+                            <span class="timeline-value">{{ issue.created_timestamp | safe_strftime }}</span>
+                        </div>
+                        {% if issue.start_time %}
+                        <div class="timeline-item">
+                            <span class="timeline-label">Started:</span>
+                            <span class="timeline-value">{{ issue.start_time | safe_strftime }}</span>
+                        </div>
+                        {% endif %}
+                        {% if issue.end_time %}
+                        <div class="timeline-item">
+                            <span class="timeline-label">Completed:</span>
+                            <span class="timeline-value">{{ issue.end_time | safe_strftime }}</span>
+                        </div>
+                        {% endif %}
+                        {% if issue.resolution_notes %}
+                        <div class="resolution-section">
+                            <h4>✅ Resolution Notes</h4>
+                            <p class="resolution-notes">{{ issue.resolution_notes }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="issue-actions">
+                    {% if issue.status == 'Pending' %}
+                        <button class="btn btn-priority" data-action="setPriority" data-issue-id="{{ issue.id }}">Set Priority</button>
+                        <button class="btn btn-tech-level" data-action="setTechLevel" data-issue-id="{{ issue.id }}">Set Tech Level</button>
+                        <button class="btn btn-start" data-action="startIssue" data-issue-id="{{ issue.id }}">Start Work</button>
+                    {% elif issue.status == 'In Progress' %}
+                        <button class="btn btn-tech-level" data-action="setTechLevel" data-issue-id="{{ issue.id }}">Update Tech Level</button>
+                        <button class="btn btn-complete" data-action="completeIssue" data-issue-id="{{ issue.id }}">Mark Complete</button>
+                    {% endif %}
+                    <button class="btn btn-history" data-action="viewHistory" data-issue-id="{{ issue.id }}">View History</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-issues">
+                <h2>No Issues Found</h2>
+                <p>There are currently no issues in the system.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Event delegation for action buttons
+document.addEventListener('click', function(e) {
+    if (e.target.matches('[data-action]')) {
+        const action = e.target.getAttribute('data-action');
+        const issueId = parseInt(e.target.getAttribute('data-issue-id'));
+        
+        switch(action) {
+            case 'setPriority':
+                setPriority(issueId);
+                break;
+            case 'setTechLevel':
+                setTechLevel(issueId);
+                break;
+            case 'startIssue':
+                startIssue(issueId);
+                break;
+            case 'completeIssue':
+                completeIssue(issueId);
+                break;
+            case 'viewHistory':
+                viewHistory(issueId);
+                break;
+        }
+    }
+});
+
+document.getElementById('printBtn').addEventListener('click', async function() {
+    try {
+        const response = await fetch('/api/print');
+        const result = await response.json();
+        if (result.success) {
+            Swal.fire({
+                title: 'Data Printed!',
+                text: `Printed ${result.total_issues} issues to console`,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            throw new Error(result.error);
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Failed to print data', 'error');
+    }
+});
+
+document.getElementById('exportBtn').addEventListener('click', async function() {
+    try {
+        const response = await fetch('/api/export');
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `issue_export_${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            Swal.fire({
+                title: 'Export Successful!',
+                text: 'Excel file has been downloaded',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            throw new Error('Export failed');
+        }
+    } catch (error) {
+        Swal.fire('Error', 'Failed to export data', 'error');
+    }
+});
+
+// Refresh functionality
+document.getElementById('refreshBtn').addEventListener('click', function() {
+    location.reload();
+});
+
+// Dashboard-specific initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Let optimized.js handle all dashboard functionality
+    // This ensures consistent behavior and proper statistics updates
+    console.log('Dashboard loaded - using optimized.js for functionality');
+});
+
+// Reset functionality
+document.getElementById('resetBtn').addEventListener('click', function() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: 'This will delete ALL data permanently!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, reset all data!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/api/reset', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('Reset!', 'All data has been reset.', 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire('Error', 'Failed to reset data', 'error');
+                });
+        }
+    });
+});
+
+// Set Priority function
+function setPriority(issueId) {
+    Swal.fire({
+        title: 'Set Priority',
+        input: 'select',
+        inputOptions: {
+            'High': 'High',
+            'Medium': 'Medium',
+            'Low': 'Low'
+        },
+        inputPlaceholder: 'Select Priority',
+        showCancelButton: true,
+        confirmButtonText: 'Set Priority',
+        preConfirm: (priority) => {
+            if (!priority) {
+                Swal.showValidationMessage('Please select a priority');
+            }
+            return priority;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/issues/${issueId}/priority`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    priority: result.value,
+                    performed_by: 'Technical Team'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Priority set successfully', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to set priority', 'error');
+            });
+        }
+    });
+}
+
+// Set Tech Level function
+function setTechLevel(issueId) {
+    Swal.fire({
+        title: 'Set Tech Level',
+        input: 'select',
+        inputOptions: {
+            'L1': 'L1 - CE',
+            'L2': 'L2 - Skidata/TKH',
+            'L3': 'L3 - Skidata/TKH'
+        },
+        inputPlaceholder: 'Select Tech Level',
+        showCancelButton: true,
+        confirmButtonText: 'Set Tech Level',
+        preConfirm: (techLevel) => {
+            if (!techLevel) {
+                Swal.showValidationMessage('Please select a tech level');
+            }
+            return techLevel;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/issues/${issueId}/tech_level`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    tech_level: result.value,
+                    performed_by: 'Technical Team'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Tech level set successfully', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to set tech level', 'error');
+            });
+        }
+    });
+}
+
+// Start Issue function
+function startIssue(issueId) {
+    Swal.fire({
+        title: 'Start Work',
+        text: 'Are you sure you want to start working on this issue?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, start work!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/issues/${issueId}/start`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    performed_by: 'Technical Team'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Work started successfully', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to start work', 'error');
+            });
+        }
+    });
+}
+
+// Complete Issue function
+function completeIssue(issueId) {
+    Swal.fire({
+        title: 'Complete Issue',
+        input: 'textarea',
+        inputLabel: 'Resolution Notes',
+        inputPlaceholder: 'Enter resolution details...',
+        inputAttributes: {
+            'aria-label': 'Enter resolution details'
+        },
+        showCancelButton: true,
+        confirmButtonText: 'Mark as Complete',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/api/issues/${issueId}/complete`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    resolution_notes: result.value || 'Issue resolved successfully',
+                    performed_by: 'Technical Team'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success!', 'Issue marked as complete', 'success').then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.error, 'error');
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', 'Failed to complete issue', 'error');
+            });
+        }
+    });
+}
+
+// View History function
+function viewHistory(issueId) {
+    fetch(`/api/issues/${issueId}/history`)
+        .then(response => response.json())
+        .then(history => {
+            if (history.length === 0) {
+                Swal.fire('No History', 'No history found for this issue', 'info');
+                return;
+            }
+            
+            let historyText = '';
+            history.forEach(entry => {
+                const timestamp = entry.timestamp ? new Date(entry.timestamp).toLocaleString() : 'N/A';
+                historyText += `${timestamp} - ${entry.action}\n${entry.description}\nPerformed by: ${entry.performed_by}\n\n`;
+            });
+            
+            Swal.fire({
+                title: 'Issue History',
+                text: historyText,
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        })
+        .catch(error => {
+            Swal.fire('Error', 'Failed to load history', 'error');
+        });
+}
+
+// Show Images function
+function showImages(imageFilenames, reportId) {
+    console.log('Image filenames:', imageFilenames); // Debug log
+    
+    if (!imageFilenames || imageFilenames.trim() === '') {
+        Swal.fire({
+            title: 'No Images',
+            text: 'No images attached to this issue',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    const images = imageFilenames.split(',').map(filename => filename.trim()).filter(filename => filename !== '');
+    console.log('Parsed images:', images); // Debug log
+    
+    if (images.length === 0) {
+        Swal.fire({
+            title: 'No Images',
+            text: 'No valid images found for this issue',
+            icon: 'info',
+            confirmButtonText: 'OK'
+        });
+        return;
+    }
+    
+    let imagesHtml = '<div class="images-gallery">';
+    
+    images.forEach((filename, index) => {
+        // Use the Flask url_for equivalent for proper URL generation
+        const imageUrl = `/static/uploads/${encodeURIComponent(filename)}`;
+        console.log('Image URL:', imageUrl); // Debug log
+        console.log('Original filename:', filename); // Debug log
+        
+        imagesHtml += `
+            <div class="image-item" style="text-align: center; margin: 10px; padding: 10px; border: 1px solid #dee2e6; border-radius: 8px; background: #f8f9fa;">
+                <img src="${imageUrl}" alt="Issue Image ${index + 1}" 
+                     loading="lazy"
+                     style="width: 120px; height: 120px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; cursor: pointer; background: #f8f9fa; opacity: 0; transition: opacity 0.3s;" 
+                     onclick="openImageModal('${imageUrl}')" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                     onload="this.style.opacity='1';">
+                <div class="image-error" style="display: none; padding: 1rem; text-align: center; color: #dc3545;">
+                    <p>Image not found: ${filename}</p>
+                </div>
+                <div class="image-info" style="margin-top: 8px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 5px;">${filename}</div>
+                    <a href="${imageUrl}" download="${filename}" 
+                       style="display: inline-block; padding: 5px 10px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; font-size: 12px;">
+                        📥 Download
+                    </a>
+                </div>
+            </div>
+        `;
+    });
+    
+    imagesHtml += '</div>';
+    
+    Swal.fire({
+        title: `Images for Issue ${reportId}`,
+        html: imagesHtml,
+        width: '80%',
+        showConfirmButton: true,
+        confirmButtonText: 'Close',
+        customClass: {
+            popup: 'images-popup'
+        }
+    });
+}
+
+// Open individual image in modal
+function openImageModal(imageUrl) {
+    Swal.fire({
+        imageUrl: imageUrl,
+        imageAlt: 'Issue Image',
+        showConfirmButton: false,
+        showCloseButton: true,
+        width: 'auto',
+        padding: '2rem',
+        background: '#000',
+        customClass: {
+            popup: 'image-modal-popup',
+            image: 'image-modal-image'
+        }
+    });
+}
+</script>
+{% endblock %}

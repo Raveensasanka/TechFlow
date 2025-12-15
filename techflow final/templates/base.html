@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}TechFlow - Technical Support Management{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="brand-icon">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h2>TechFlow</h2>
+                <span class="brand-subtitle">Support Management</span>
+            </div>
+            <div class="nav-links">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Report Issue</span>
+                </a>
+                {% if session.logged_in %}
+                    {% if session.user_role == 'tech_team' %}
+                        <a href="/dashboard" class="nav-link">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Tech Dashboard</span>
+                        </a>
+                        <a href="/client-dashboard" class="nav-link">
+                            <i class="fas fa-users"></i>
+                            <span>Client View</span>
+                        </a>
+                    {% else %}
+                        <a href="/client-dashboard" class="nav-link">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>My Issues</span>
+                        </a>
+                    {% endif %}
+                    <div class="nav-user">
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="username">{{ session.username }}</span>
+                            <span class="user-role">{{ session.user_role.title() }}</span>
+                        </div>
+                        <a href="/logout" class="nav-link logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </div>
+                {% else %}
+                    <a href="/login" class="nav-link login-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Login</span>
+                    </a>
+                {% endif %}
+            </div>
+            <button class="mobile-menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message flash-{{ 'danger' if category == 'error' else 'success' }}">
+                        {{ message }}
+                        <span class="flash-close" onclick="this.parentElement.remove()">&times;</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{{ url_for('static', filename='optimized.js') }}" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
